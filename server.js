@@ -1,7 +1,6 @@
 'use strict'
 
 const Koa = require('koa')
-const gracefulShutdown = require('http-graceful-shutdown')
 const bodyParser = require('koa-bodyparser')
 const json = require('koa-json')
 const pino = require('koa-pino-logger')
@@ -18,7 +17,9 @@ app.use(json({ pretty: app.env === 'development' }))
 app.use(bodyParser())
 
 app.use(async (ctx, next) => {
-  ctx.set('X-Request-ID', uuid.v4())
+  var requestId = uuid.v4()
+  ctx.set('X-Request-ID', requestId)
+  ctx.log = ctx.log.child({ requestId: requestId })
   await next()
 })
 
@@ -33,16 +34,4 @@ app.use((ctx) => {
   ctx.body = { foo: 'bar' }
 })
 
-var server = app.listen(3002)
-
-// this enables the graceful shutdown with advanced options
-gracefulShutdown(server,
-  {
-    signals: 'SIGINT SIGTERM',
-    timeout: 10000,
-    development: false,
-    finally: () => {
-      console.log('Server shutted down')
-    }
-  }
-)
+module.exports = app
