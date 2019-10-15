@@ -18,5 +18,8 @@
     "koa-respond": "^2.1.0",
     "request-received": "0.0.3",
     "uuid": "^3.3.3"
+  },
+  "devDependencies": {
+    "standard": "^14.3.1"
   }
 }
