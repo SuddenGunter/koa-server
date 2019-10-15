@@ -2,35 +2,25 @@
 
 const Koa = require('koa');
 const gracefulShutdown = require('http-graceful-shutdown');
-const app = new Koa();
 const bodyParser = require('koa-bodyparser');
 const json = require('koa-json')
 const pino = require('koa-pino-logger')
+const helmet = require("koa-helmet");
+const respond = require('koa-respond');
+const uuid = require('uuid')
+const app = new Koa();
 
 app.use(pino())
 app.silent = true
-app.use(logger({
-  transporter: (str, args) => {
-      var m = Object.getOwnPropertyNames(pino)
-  }
-}))
-
+app.use(helmet());
+app.use(respond());
 app.use(json({ pretty: app.env == "development" }))
 app.use(bodyParser());
 
-// app.use((ctx) => {
-//   ctx.log.info('something else')
-// })
-
-// logger
-
 app.use(async (ctx, next) => {
+  ctx.set('X-Request-ID', uuid.v4())
   await next();
-  const rt = ctx.response.get('X-Response-Time');
-  console.log(`${ctx.method} ${ctx.url} - ${rt}`);
 });
-
-// x-response-time
 
 app.use(async (ctx, next) => {
   const start = Date.now();
@@ -39,15 +29,13 @@ app.use(async (ctx, next) => {
   ctx.set('X-Response-Time', `${ms}ms`);
 });
 
-// response
 
 app.use((ctx) => {
   ctx.body = { foo: 'bar' }
 })
 
 
-server = app.listen(3000);
-
+var server = app.listen(3002);
 
 // this enables the graceful shutdown with advanced options
 gracefulShutdown(server,
